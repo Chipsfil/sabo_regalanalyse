@@ -584,8 +584,10 @@ input:checked+.slider:before {
 }
 
 .update-progress {
-    width: 250px;
+    min-width: 280px;
+    max-width: 300px;
     text-align: center;
+    display: inline-block;
 }
 
 .progress-bar {

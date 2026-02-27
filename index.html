@@ -131,8 +131,10 @@
             // Evento: Controllo in corso
             window.updaterAPI.onUpdateChecking(() => {
                 const statusText = document.getElementById('updateStatusText');
-                statusText.textContent = 'Controllo aggiornamenti...';
-                statusText.style.color = '#2196F3';
+                if (statusText) {
+                    statusText.textContent = 'Controllo aggiornamenti...';
+                    statusText.style.color = '#2196F3';
+                }
                 document.getElementById('checkUpdateBtn').style.display = 'none';
             });
 
@@ -140,8 +142,10 @@
             window.updaterAPI.onUpdateAvailable((info) => {
                 updateInfo = info;
                 const statusText = document.getElementById('updateStatusText');
-                statusText.innerHTML = `Nuovo aggiornamento: <strong>v${info.version}</strong>`;
-                statusText.style.color = '#4CAF50';
+                if (statusText) {
+                    statusText.innerHTML = `Nuovo aggiornamento: <strong>v${info.version}</strong>`;
+                    statusText.style.color = '#4CAF50';
+                }
                 
                 document.getElementById('downloadUpdateBtn').style.display = 'inline-block';
                 document.getElementById('checkUpdateBtn').style.display = 'none';
@@ -150,27 +154,35 @@
             // Evento: Nessun aggiornamento
             window.updaterAPI.onUpdateNotAvailable((info) => {
                 const statusText = document.getElementById('updateStatusText');
-                statusText.textContent = `v${info.version} - Aggiornato ✓`;
-                statusText.style.color = '#4CAF50';
-                
-                setTimeout(() => {
-                    statusText.textContent = `v${info.version}`;
-                    statusText.style.color = '#333';
+                if (statusText) {
+                    statusText.textContent = `v${info.version} - Aggiornato ✓`;
+                    statusText.style.color = '#4CAF50';
+                    
+                    setTimeout(() => {
+                        statusText.textContent = `v${info.version}`;
+                        statusText.style.color = '#333';
+                        document.getElementById('checkUpdateBtn').style.display = 'inline-block';
+                    }, 3000);
+                } else {
                     document.getElementById('checkUpdateBtn').style.display = 'inline-block';
-                }, 3000);
+                }
             });
 
             // Evento: Errore aggiornamento
             window.updaterAPI.onUpdateError((error) => {
                 const statusText = document.getElementById('updateStatusText');
-                statusText.textContent = 'Errore controllo aggiornamenti';
-                statusText.style.color = '#f44336';
-                
-                setTimeout(() => {
-                    statusText.textContent = 'v' + document.getElementById('currentVersion').textContent;
-                    statusText.style.color = '#333';
+                if (statusText) {
+                    statusText.textContent = 'Errore controllo aggiornamenti';
+                    statusText.style.color = '#f44336';
+                    
+                    setTimeout(() => {
+                        statusText.textContent = 'v' + document.getElementById('currentVersion').textContent;
+                        statusText.style.color = '#333';
+                        document.getElementById('checkUpdateBtn').style.display = 'inline-block';
+                    }, 5000);
+                } else {
                     document.getElementById('checkUpdateBtn').style.display = 'inline-block';
-                }, 5000);
+                }
             });
 
             // Evento: Progresso download
@@ -183,8 +195,10 @@
             // Evento: Download completato
             window.updaterAPI.onUpdateDownloaded((info) => {
                 const statusText = document.getElementById('updateStatusText');
-                statusText.innerHTML = `Aggiornamento <strong>v${info.version}</strong> pronto!`;
-                statusText.style.color = '#4CAF50';
+                if (statusText) {
+                    statusText.innerHTML = `Aggiornamento <strong>v${info.version}</strong> pronto!`;
+                    statusText.style.color = '#4CAF50';
+                }
                 
                 document.getElementById('updateProgress').style.display = 'none';
                 document.getElementById('downloadUpdateBtn').style.display = 'none';
@@ -196,21 +210,26 @@
                 const result = await window.updaterAPI.checkForUpdates();
                 if (!result.success) {
                     const statusText = document.getElementById('updateStatusText');
-                    statusText.textContent = 'Errore controllo aggiornamenti';
-                    statusText.style.color = '#f44336';
+                    if (statusText) {
+                        statusText.textContent = 'Errore controllo aggiornamenti';
+                        statusText.style.color = '#f44336';
+                    }
                 }
             });
 
             // Bottone: Scarica aggiornamento
             document.getElementById('downloadUpdateBtn').addEventListener('click', async () => {
+                document.getElementById('updateProgress').style.display = 'block';
                 const statusText = document.getElementById('updateStatusText');
-                statusText.textContent = 'Download in corso...';
-                statusText.style.color = '#2196F3';
+                if (statusText) {
+                    statusText.textContent = 'Download in corso...';
+                    statusText.style.color = '#2196F3';
+                }
                 
                 document.getElementById('downloadUpdateBtn').style.display = 'none';
                 
                 const result = await window.updaterAPI.downloadUpdate();
-                if (!result.success) {
+                if (!result.success && statusText) {
                     statusText.textContent = 'Errore download';
                     statusText.style.color = '#f44336';
                 }
