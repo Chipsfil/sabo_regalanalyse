@@ -21,7 +21,7 @@ set GH_TOKEN=IL_TUO_TOKEN_GITHUB_QUI
 
 **macOS/Linux** - Apri il terminale e esegui:
 ```bash
-export GH_TOKEN=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
+export GH_TOKEN=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
 ```
 
 ### Come Ottenere il Token GitHub:
