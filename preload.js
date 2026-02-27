@@ -16,22 +16,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openDirectoryDialog: () => ipcRenderer.invoke('open-directory-dialog'), // Fixed channel name
   onDirectoryChanged: (callback) => ipcRenderer.on('directory-changed', callback),
   restartApp: () => ipcRenderer.send('restart-app'),
-})
 
-contextBridge.exposeInMainWorld('updaterAPI', {
-  // Controllo aggiornamenti
-  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
-  downloadUpdate: () => ipcRenderer.invoke('download-update'),
-  installUpdate: () => ipcRenderer.invoke('install-update'),
-  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
-  
-  // Eventi updater
-  onUpdateChecking: (callback) => ipcRenderer.on('update-checking', callback),
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', (event, info) => callback(info)),
-  onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', (event, info) => callback(info)),
-  onUpdateError: (callback) => ipcRenderer.on('update-error', (event, error) => callback(error)),
-  onDownloadProgress: (callback) => ipcRenderer.on('update-download-progress', (event, progress) => callback(progress)),
-  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', (event, info) => callback(info)),
+  // OTA Update functions
+  downloadUpdate: () => ipcRenderer.send('download-update'),
+  installUpdate: () => ipcRenderer.send('install-update'),
+  onCheckingForUpdate: (callback) => ipcRenderer.on('checking-for-update', callback),
+  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+  onUpdateNotAvailable: (callback) => ipcRenderer.on('update-not-available', callback),
+  onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (_event, percent) => callback(percent)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
+  onUpdateError: (callback) => ipcRenderer.on('update-error', (_event, message) => callback(message)),
 })
 
 webFrame.setZoomFactor(0.85)

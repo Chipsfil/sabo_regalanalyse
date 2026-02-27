@@ -7,6 +7,7 @@ yarn.lock
 build/
 dist/
 out/
+app_with_working_updates/
 
 # Environment variables
 .env
