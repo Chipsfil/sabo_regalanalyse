@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restartApp: () => ipcRenderer.send('restart-app'),
 
   // OTA Update functions
+  getUpdateState: () => ipcRenderer.invoke('get-update-state'),
   downloadUpdate: () => ipcRenderer.send('download-update'),
   installUpdate: () => ipcRenderer.send('install-update'),
   onCheckingForUpdate: (callback) => ipcRenderer.on('checking-for-update', callback),

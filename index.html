@@ -55,19 +55,49 @@
         <span id="update-status">Controllo aggiornamenti...</span>
     </div>
     <script>
-        window.electronAPI.onCheckingForUpdate(() => {
-            const el = document.getElementById('update-status');
-            el.textContent = 'Controllo aggiornamenti...';
-            document.getElementById('update-container').style.display = 'block';
-        });
-
-        window.electronAPI.onUpdateAvailable(() => {
+        function showUpdateButton() {
             const container = document.getElementById('update-container');
+            container.style.display = 'block';
             container.innerHTML = '<button id="download-update-btn" style="padding: 8px 20px; font-size: 14px; cursor: pointer; background: #da2a1c; color: white; border: none; border-radius: 4px; font-family: gothamlight;">Scarica e installa update</button>';
             document.getElementById('download-update-btn').addEventListener('click', () => {
                 container.innerHTML = '<span id="update-status">Download aggiornamento in corso...</span>';
                 window.electronAPI.downloadUpdate();
             });
+        }
+
+        function showDownloading(percent) {
+            const container = document.getElementById('update-container');
+            container.style.display = 'block';
+            container.innerHTML = '<span id="update-status">Download aggiornamento in corso... ' + (percent || 0) + '%</span>';
+        }
+
+        // Restore correct UI based on current update state
+        window.electronAPI.getUpdateState().then(({ state, percent }) => {
+            const container = document.getElementById('update-container');
+            if (state === 'checking') {
+                container.style.display = 'block';
+            } else if (state === 'available') {
+                showUpdateButton();
+            } else if (state === 'downloading') {
+                showDownloading(percent);
+            } else if (state === 'downloaded') {
+                container.style.display = 'block';
+                container.innerHTML = '<span>Aggiornamento scaricato. Installazione in corso...</span>';
+                setTimeout(() => window.electronAPI.installUpdate(), 1500);
+            } else {
+                container.style.display = 'none';
+            }
+        });
+
+        // Live event listeners for changes happening while on this page
+        window.electronAPI.onCheckingForUpdate(() => {
+            const el = document.getElementById('update-status');
+            if (el) el.textContent = 'Controllo aggiornamenti...';
+            document.getElementById('update-container').style.display = 'block';
+        });
+
+        window.electronAPI.onUpdateAvailable(() => {
+            showUpdateButton();
         });
 
         window.electronAPI.onUpdateNotAvailable(() => {

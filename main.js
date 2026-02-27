@@ -252,41 +252,52 @@ ipcMain.on('restart-app', () => {
   app.exit(0);
 });
 
+// OTA Update state tracking
+let updateState = 'checking'; // 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
+let downloadPercent = 0;
+
 // OTA Update functions
 function initUpdater() {
   autoUpdater.autoDownload = false;
 
   autoUpdater.on('checking-for-update', () => {
+    updateState = 'checking';
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('checking-for-update');
     }
   });
 
   autoUpdater.on('update-available', () => {
+    updateState = 'available';
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-available');
     }
   });
 
   autoUpdater.on('update-not-available', () => {
+    updateState = 'not-available';
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-not-available');
     }
   });
 
   autoUpdater.on('download-progress', (progress) => {
+    updateState = 'downloading';
+    downloadPercent = Math.round(progress.percent);
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('download-progress', Math.round(progress.percent));
+      mainWindow.webContents.send('download-progress', downloadPercent);
     }
   });
 
   autoUpdater.on('update-downloaded', () => {
+    updateState = 'downloaded';
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-downloaded');
     }
   });
 
   autoUpdater.on('error', (err) => {
+    updateState = 'error';
     console.error('Update error:', err);
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update-error', err.message);
@@ -295,6 +306,10 @@ function initUpdater() {
 
   autoUpdater.checkForUpdates();
 }
+
+ipcMain.handle('get-update-state', () => {
+  return { state: updateState, percent: downloadPercent };
+});
 
 ipcMain.on('download-update', () => {
   autoUpdater.downloadUpdate();
