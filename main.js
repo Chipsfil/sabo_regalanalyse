@@ -297,10 +297,8 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  // Check for updates after a short delay
-  setTimeout(() => {
-    autoUpdater.checkForUpdatesAndNotify()
-  }, 3000)
+  // Check for updates immediately on startup
+  autoUpdater.checkForUpdatesAndNotify()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

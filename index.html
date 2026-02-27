@@ -51,6 +51,7 @@
                 <div class="update-banner">
                     <span id="update-message">Checking for updates...</span>
                     <button id="install-update-btn" style="display: none;">Install Update Now</button>
+                    <button id="check-updates-btn">Manual Check</button>
                 </div>
             </div>
         </div>
@@ -124,7 +125,9 @@
                         break;
                         
                     case 'update-available':
+                        notification.style.display = 'block';
                         message.textContent = `Update available: v${status.data.version}`;
+                        installBtn.style.display = 'none';
                         break;
                         
                     case 'update-not-available':
@@ -132,17 +135,22 @@
                         break;
                         
                     case 'download-progress':
+                        notification.style.display = 'block';
                         const percent = Math.round(status.data.percent);
                         message.textContent = `Downloading update... ${percent}%`;
+                        installBtn.style.display = 'none';
                         break;
                         
                     case 'update-downloaded':
+                        notification.style.display = 'block';
                         message.textContent = 'Update downloaded! Ready to install.';
                         installBtn.style.display = 'inline-block';
                         break;
                         
                     case 'update-error':
+                        notification.style.display = 'block';
                         message.textContent = `Update error: ${status.data}`;
+                        installBtn.style.display = 'none';
                         setTimeout(() => {
                             notification.style.display = 'none';
                         }, 5000);
@@ -156,9 +164,21 @@
             });
 
             // Manual update check button
-            document.getElementById('check-updates-btn')?.addEventListener('click', async () => {
-                const result = await window.electronAPI.checkForUpdates();
-                console.log('Update check result:', result);
+            document.addEventListener('DOMContentLoaded', () => {
+                const checkBtn = document.getElementById('check-updates-btn');
+                if (checkBtn) {
+                    checkBtn.addEventListener('click', async () => {
+                        checkBtn.disabled = true;
+                        checkBtn.textContent = 'Checking...';
+                        try {
+                            const result = await window.electronAPI.checkForUpdates();
+                            console.log('Update check result:', result);
+                        } finally {
+                            checkBtn.disabled = false;
+                            checkBtn.textContent = 'Manual Check';
+                        }
+                    });
+                }
             });
         </script>
         <div id="excel-import-ui" style="text-align: left; padding-top: 20px; display: inline;">

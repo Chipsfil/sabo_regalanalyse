@@ -546,3 +546,24 @@ input:checked+.slider:before {
 #install-update-btn:hover {
     background-color: #c21810;
 }
+
+#check-updates-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+#check-updates-btn:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+#check-updates-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
