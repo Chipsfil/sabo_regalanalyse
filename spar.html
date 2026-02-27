@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link title="style" media="screen" href="style-single.css" rel="stylesheet" type="text/css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <title>Sabo Regalanalyse - Spar</title>
+</head>
+
+<body>
+    <header>
+        <div class="img-header">
+            <a href="index.html"><img src="assets/Sabo-Logo.png" class="sabo-icon"></a>
+        </div>
+        <h1 class="title">Sabo Regalanalyse</h1>
+        <div class="img-header">
+            <a href="index.html"><img src="assets/home1.png" class="home-icon"></a>
+        </div>
+    </header>
+    <!-- <div style="margin-bottom: 2.5%; margin-left: 2%;">
+        <h2 style="display: inline;">Wählt eine Datenbank:</h2>
+        <select id="fileDropdown" style="display:inline; margin-left: 1%;">
+            <option value="">-- Select File --</option>
+        </select>
+    </div> -->
+    <script>
+        // Handle auto-loading when file is ready
+        window.excelAPI.onFileLoaded((event, result) => {
+            if (result.success) {
+                document.getElementById('import-status').textContent = `Auto-loaded: ${result.filePath}`;
+                loadData();
+            }
+        });
+
+        // On page reoad
+        document.addEventListener('DOMContentLoaded', async () => {
+            const lastPath = localStorage.getItem('lastExcelPath');
+            if (lastPath) {
+                await loadData();
+            }
+        });
+
+        // Load function
+        async function loadData() {
+            try {
+                const data = await window.excelAPI.getExcelData("Spar");
+                if (!data) return;
+                parseDataAndCreateTable(data, "Spar");
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError(error.message);
+            }
+        }
+
+        // Helper function to clear existing tables
+        function clearExistingTables() {
+            const container = document.getElementById('tableContainerSingle');
+            if (container) container.innerHTML = '';
+        }
+    </script>
+
+    <form class="filters" id="form">
+        <div class="filter-group">
+            <button type="button" id="clearAllButton" onclick="clearAll()">Clear All</button>
+        </div>
+        <div class="filter-group">
+            <label><strong>Marke:</strong></label><br>
+            <input type="text" id="searchInputMarke" placeholder="Markename" class="input-textbox"><br>
+            <button type="button" onclick="clearText('searchInputMarke')">Clear</button><br><br>
+            <label><strong>Produkt:</strong></label><br>
+            <input type="text" id="searchInputProdukt" placeholder="Produktname" class="input-textbox"><br>
+            <button type="button" onclick="clearText('searchInputProdukt')">Clear</button>
+        </div>
+        <div class="filter-group">
+            <label><strong>Familie:</strong></label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Olivenöl" data-column="Familie">
+                Olivenöl</label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Saatenöl" data-column="Familie">
+                Saatenöl</label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Spezialöl" data-column="Familie">
+                Spezialöl</label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Frittieröl" data-column="Familie">
+                Frittieröl</label><br>
+        </div>
+        <div class="filter-group">
+            <label><strong>Qualität:</strong></label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Konventionell" data-column="Qualität">
+                Konventionell
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Biologisch" data-column="Qualität">
+                Biologisch
+            </label><br>
+        </div>
+        <div class="filter-group">
+            <label><strong>Preis Range:</strong></label><br>
+            <input type="text" id="minPreis" placeholder="Min Preis" step="0.50" min="0" class="input-textbox"><br>
+            <input type="text" id="maxPreis" placeholder="Max Preis" step="0.50" min="0" class="input-textbox"><br>
+            <div id="warningText" class="warning-text">Enter only numeric values.</div>
+            <button type="button" onclick="clearText('maxPreis');clearText('minPreis')">Clear</button>
+        </div>
+        <div class="filter-group">
+            <label><strong>Liter:</strong></label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="0.10" data-column="Liter">
+                100mL
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="0.25" data-column="Liter">
+                250mL
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="0.50" data-column="Liter">
+                500mL
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="0.75" data-column="Liter">
+                750mL
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="1.00" data-column="Liter">
+                1L
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="2.00" data-column="Liter">
+                2L
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="3.00" data-column="Liter">
+                3L
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="12.00" data-column="Liter">
+                12L
+            </label><br>
+        </div>
+        <div class="filter-group">
+            <label><strong>Gebinde:</strong></label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Glasflasche" data-column="Gebinde">
+                Glas
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="PET" data-column="Gebinde">
+                PET
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="ALU" data-column="Gebinde">
+                ALU
+            </label><br>
+            <label class="filter-label">
+                <input type="checkbox" class="filter" value="Bibox" data-column="Gebinde">
+                Bibox
+            </label><br>
+        </div>
+        <div class="filter-group">
+            <label><strong>Im Sortiment:</strong></label><br>
+            <label class="filter-label">
+                <input type="radio" class="filter" name="imKatalog" value="Ja" data-column="Im Katalog">
+                Nur im Sortiment zeigen
+            </label><br>
+            <label class="filter-label">
+                <input type="radio" class="filter" name="imKatalog" value="Nein" data-column="Im Katalog">
+                Nur aus Sortiment zeigen
+            </label><br>
+            <button type="button" onclick="resetRadios()">Beide zeigen</button>
+        </div>
+        <script>
+            function resetRadios() {
+                // Reset all radio buttons with the name 'imKatalog'
+                const radios = document.getElementsByName('imKatalog');
+                radios.forEach(radio => radio.checked = false);
+                filterTable();
+            }
+
+            window.onload = function () {
+                const firstRadioButton = document.querySelector('input[name="imKatalog"]');
+                firstRadioButton.checked = true;  // Check the first radio button
+                setTimeout(() => {
+                    filterTable();  // Call the function after checking the radio
+                }, 500);
+            }
+        </script>
+    </form>
+
+    <div class="table-container-single" id="tableContainerSingle"></div>
+
+    <script>
+        
+
+        function validateNumberInput(event) {
+            const inputField = event.target;
+            const warningMessage = document.getElementById('warningText');
+            const value = inputField.value;
+            console.log(inputField);
+            console.log(inputField.value);
+
+            // Check if the input value contains any non-numeric characters
+            const validNumberPattern = /^[0-9.]*$/;
+            if (!validNumberPattern.test(value)) {
+                // Display the warning message
+                warningMessage.style.display = 'block';
+                // inputField.style.border = '2px solid red';
+            } else {
+                // Hide the warning message
+                warningMessage.style.display = 'none';
+                // inputField.style.border = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkboxes = document.querySelectorAll('.filter');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', filterTable);
+            });
+            const searchInputMarke = document.getElementById('searchInputMarke');
+            searchInputMarke.addEventListener('input', filterTable);
+
+            const searchInputProdukt = document.getElementById('searchInputProdukt');
+            searchInputProdukt.addEventListener('input', filterTable);
+
+            const minPreisInput = document.getElementById('minPreis');
+            minPreisInput.addEventListener('input', filterTable);
+            minPreisInput.addEventListener('input', validateNumberInput);
+
+            const maxPreisInput = document.getElementById('maxPreis');
+            maxPreisInput.addEventListener('input', filterTable);
+            maxPreisInput.addEventListener('input', validateNumberInput);
+        });
+
+        function clearText(input_id) {
+            document.getElementById(input_id).value = "";
+            filterTable();
+        }
+
+        function clearAll() {
+            document.getElementById("form").reset();
+            filterTable();
+        }
+
+        function filterTable() {
+            const tableContainer = document.querySelector('.table-container-single');
+            const cells = tableContainer.querySelectorAll('.product-cell-single-container');
+            const filters = Array.from(document.querySelectorAll('.filter:checked')).reduce((acc, checkbox) => {
+                const column = checkbox.getAttribute('data-column');
+                if (!acc[column]) acc[column] = [];
+                acc[column].push(checkbox.value);
+                return acc;
+            }, {});
+
+            const minPreisValue = parseFloat(document.getElementById('minPreis').value) || 0;
+            const maxPreisValue = parseFloat(document.getElementById('maxPreis').value) || Infinity;
+
+            const searchInputMarkeValue = document.getElementById('searchInputMarke').value.toLowerCase().trim();
+            const searchInputProduktValue = document.getElementById('searchInputProdukt').value.toLowerCase().trim();
+
+            for (let i = 0; i < cells.length; i++) {
+                const cellSingle = cells[i];
+                const preis = parseFloat(cellSingle.getAttribute('data-preis'));
+                const liter = cellSingle.getAttribute('data-liter');
+                const familie = cellSingle.getAttribute('data-familie');
+                const qualität = cellSingle.getAttribute('data-qualität');
+                const marktsegment = cellSingle.getAttribute('data-marktsegment');
+                const frittieroel = cellSingle.getAttribute('data-frittieroel');
+                const gebinde = cellSingle.getAttribute('data-gebinde');
+                const productBrand = cellSingle.getAttribute('data-brand').toLowerCase();
+                const productName = cellSingle.getAttribute('data-productname').toLowerCase();
+                const inout = cellSingle.getAttribute('data-inout');
+                const im_katalog = cellSingle.getAttribute('data-im_katalog');
+                const zertifizierung = cellSingle.getAttribute('data-zertifizierung');
+
+                let showRow = true;
+
+                for (let [column, values] of Object.entries(filters)) {
+                    let cellValue;
+                    switch (column) {
+                        case 'Familie':
+                            cellValue = familie;
+                            break;
+                        case 'Liter':
+                            cellValue = liter;
+                            break;
+                        case 'Qualität':
+                            cellValue = qualität;
+                            break;
+                        case 'Gebinde':
+                            cellValue = gebinde;
+                            break;
+                        case 'Im Katalog':
+                            cellValue = im_katalog;
+                            break;
+                    }
+
+                    if (!values.includes(cellValue)) {
+                        showRow = false;
+                        break;
+                    }
+                }
+
+                if (preis < minPreisValue || preis > maxPreisValue) {
+                    showRow = false;
+                }
+
+                if (!productBrand.includes(searchInputMarkeValue)) {
+                    showRow = false;
+                }
+
+                if (!productName.includes(searchInputProduktValue)) { // Add this condition
+                    showRow = false;
+                }
+                cellSingle.style.display = showRow ? '' : 'none';
+            }
+        }
+
+        function parseDataAndCreateTable(rows, id_text) {
+            const filteredRows = rows.filter(row => row.some(cell => String(cell).trim() !== ''));
+            const headers = filteredRows[0];
+            const tableContainerSingle = document.getElementById('tableContainerSingle');
+
+            const productHeader = document.createElement('div');
+            productHeader.setAttribute('class', "table-logo-container-single");
+            productHeader.innerHTML = `<img class="table-logo" src="assets/Store-logo/${id_text}.png" alt="${id_text}">`;
+            tableContainerSingle.appendChild(productHeader);
+
+            for (let i = 1; i < filteredRows.length; i++) {
+                const cells = filteredRows[i].map(c => String(c));
+                // Format price and liter to 2 decimal places
+                if (!isNaN(parseFloat(cells[1]))) cells[1] = parseFloat(cells[1]).toFixed(2);
+                if (!isNaN(parseFloat(cells[2]))) cells[2] = parseFloat(cells[2]).toFixed(2);
+                if (cells.length >= headers.length && cells.some(cell => cell.trim() !== '')) {
+                    const cellSingle = document.createElement('div');
+                    cellSingle.className = 'product-cell-single-container';
+                    cellSingle.setAttribute('data-productname', cells[0]);
+                    cellSingle.setAttribute('data-preis', cells[1]);
+                    cellSingle.setAttribute('data-liter', cells[2]);
+                    cellSingle.setAttribute('data-brand', cells[4]);
+                    cellSingle.setAttribute('data-marktsegment', cells[5]);
+                    cellSingle.setAttribute('data-familie', cells[6]);
+                    cellSingle.setAttribute('data-qualität', cells[7]);
+                    cellSingle.setAttribute('data-gebinde', cells[8]);
+                    cellSingle.setAttribute('data-zertifizierung', cells[9]);
+                    cellSingle.setAttribute('data-kategorie', cells[12]);
+                    cellSingle.setAttribute('data-inout', cells[13]);
+                    cellSingle.setAttribute('data-frittieroel', cells[14]);
+                    cellSingle.setAttribute('data-hersteller', cells[15]);
+                    cellSingle.setAttribute('data-im_katalog', cells[16]);
+                    const image_path = (cells[20] && cells[20] !== "-")
+                        ? `app://Bildern/${id_text}/${cells[20]}`
+                        : `app://Bildern/no-image.png`;
+                    cellSingle.setAttribute('data-img', image_path); // Assuming the image path is the 9th column
+
+                    const productCell = document.createElement('div');
+                    productCell.className = 'product-cell-single';
+                    const img = document.createElement('img');
+                    img.src = image_path;
+                    img.alt = cells[0];
+                    img.className = 'product-img';
+
+                    const text = document.createElement('div');
+                    text.className = 'cell-product-text';
+                    text.textContent = cells[0];
+
+                    const brand = document.createElement('div');
+                    brand.className = 'cell-brand-text';
+                    brand.textContent = cells[4];
+
+                    const price = document.createElement('div');
+                    price.className = 'cell-price-text';
+                    price.textContent = cells[1] + ' CHF';
+
+                    productCell.appendChild(img);
+                    productCell.appendChild(text);
+                    productCell.appendChild(brand);
+                    productCell.appendChild(price);
+                    cellSingle.appendChild(productCell);
+                    tableContainerSingle.appendChild(cellSingle);
+
+                    // Create hover panel dynamically
+                    const hoverPanel = document.createElement('div');
+                    hoverPanel.className = 'hover-panel hidden';
+                    cellSingle.appendChild(hoverPanel);
+
+                    // Show and hide hover panel on mouse events
+                    cellSingle.addEventListener('mousedown', function () {
+                        const rowData = {
+                            Product: cells[0],
+                            Preis: cells[1],
+                            Liter: cells[2],
+                            Familie: cells[6],
+                            Qualität: cells[7],
+                            Kategorie: cells[12],
+                            Frittieroel: cells[14],
+                            Gebinde: cells[8],
+                            Zertifizierung: cells[9],
+                            Marke: cells[4],
+                            Hersteller: cells[15],
+                        };
+
+                        // Populate the panel with row data and larger image
+                        hoverPanel.innerHTML = `
+                                <p class="hover-panel-product">${rowData.Product}</p>
+                                <div class="hover-img-container">
+                                    <img src="${image_path}" alt="${cells[0]}" class="hover-img">
+                                </div>
+                                <div class="hover-data-container">
+                                    <p><strong>Marke</strong>: ${rowData.Marke}</p>
+                                    <p><strong>Preis</strong>: ${rowData.Preis} CHF</p>
+                                    <p><strong>Liter</strong>: ${rowData.Liter} L</p>
+                                    <p><strong>Familie</strong>: ${rowData.Familie}</p>
+                                    <p><strong>Qualität</strong>: ${rowData.Qualität}</p>
+                                    <p><strong>Kategorie</strong>: ${rowData.Kategorie}</p>
+                                    <p><strong>Zertifizierung</strong>: ${rowData.Zertifizierung}</p>
+                                    <p><strong>Gebinde</strong>: ${rowData.Gebinde}</p>
+                                    <p><strong>Hersteller</strong>: ${rowData.Hersteller}</p>
+                                <div>
+                                `
+                            ;
+
+                        hoverPanel.classList.remove('hidden');
+                        positionHoverPanel(cellSingle, hoverPanel);
+                    });
+
+                    cellSingle.addEventListener('mouseleave', function () {
+                        hoverPanel.classList.add('hidden');
+                    });
+                }
+            }
+        }
+
+        function positionHoverPanel(row, hoverPanel) {
+            const rect = row.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+            // Calculate right edge of hover panel
+            const hoverPanelRight = rect.left + hoverPanel.offsetWidth;
+            const viewportWidth = window.innerWidth;
+
+            // Adjust left position if the right edge is out of viewport
+            if (hoverPanelRight > viewportWidth) {
+                hoverPanel.style.left = (viewportWidth - hoverPanel.offsetWidth) + scrollLeft + 'px';
+            } else {
+                hoverPanel.style.left = rect.left + scrollLeft + 'px';
+            }
+
+            // Calculate bottom edge of hover panel
+            const hoverPanelBottom = rect.top + hoverPanel.offsetHeight;
+            const viewportHeight = window.innerHeight;
+
+            // Adjust top position if the bottom edge is out of viewport
+            if (hoverPanelBottom > viewportHeight) {
+                hoverPanel.style.top = (viewportHeight - hoverPanel.offsetHeight) + scrollTop + 'px';
+            } else if (rect.top < 0) {
+                // Adjust top position if the top edge is out of viewport
+                hoverPanel.style.top = scrollTop + 105 + 'px';
+            } else {
+                hoverPanel.style.top = rect.top + scrollTop + 'px';
+            }
+        }
+
+        window.addEventListener('scroll', function () {
+            const visiblePanels = document.querySelectorAll('.hover-panel:not(.hidden)');
+            visiblePanels.forEach(panel => {
+                const row = panel.parentElement;
+                positionHoverPanel(row, panel);
+            });
+        });
+    </script>
+</body>
+
+</html>
