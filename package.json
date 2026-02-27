@@ -12,6 +12,7 @@
     "publish": "electron-builder --publish always"
   },
   "dependencies": {
+    "electron-log": "^5.1.7",
     "electron-store": "^10.1.0",
     "electron-updater": "^6.8.3",
     "exceljs": "^4.4.0",

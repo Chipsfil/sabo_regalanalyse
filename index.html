@@ -18,7 +18,7 @@
             <br><br>
         </div>
 
-        <h1 class="title">Sabo Regalanalyse v1.2.4</h1>
+        <h1 class="title">Sabo Regalanalyse</h1>
         <div class="img-header">
             <div class="settings-container">
                 <div class="settings-trigger"><img src="assets/settings.png"
@@ -47,11 +47,24 @@
                         style="width: 20px; height: auto; margin-right: 5px;"><span
                         style="vertical-align: 3px;">Tutorial</span></a>
             </div>
-            <div id="update-notification" style="display: none;">
-                <div class="update-banner">
-                    <span id="update-message">Checking for updates...</span>
-                    <button id="install-update-btn" style="display: none;">Install Update Now</button>
-                    <button id="check-updates-btn">Manual Check</button>
+            <div class="update-container">
+                <div id="updateStatus" class="update-status" style="display: none;">
+                    <span id="updateStatusText">v<span id="currentVersion">1.2.4</span></span>
+                </div>
+                <button id="checkUpdateBtn" class="update-btn" style="display: none;">
+                    Controlla Aggiornamenti
+                </button>
+                <button id="downloadUpdateBtn" class="update-btn download-btn" style="display: none;">
+                    Scarica Aggiornamento
+                </button>
+                <button id="installUpdateBtn" class="update-btn install-btn" style="display: none;">
+                    Installa e Riavvia
+                </button>
+                <div id="updateProgress" class="update-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div id="progressBarFill" class="progress-fill"></div>
+                    </div>
+                    <span id="progressText">0%</span>
                 </div>
             </div>
         </div>
@@ -101,83 +114,112 @@
             window.electronAPI.getConfig().then(config => {
                 updateCurrentDirDisplay(config.Dir);
             });
-        </script>
 
-        <!-- Update Notification Script -->
-        <script>
-            // Display current version
-            document.addEventListener('DOMContentLoaded', async () => {
-                const version = await window.electronAPI.getAppVersion();
-                console.log('App version:', version);
+            // ===== AUTO UPDATER MANAGEMENT =====
+            let updateInfo = null;
+
+            // Carica versione corrente
+            window.updaterAPI.getAppVersion().then(result => {
+                document.getElementById('currentVersion').textContent = result.version;
             });
 
-            // Listen for update events
-            window.electronAPI.onUpdateStatus((status) => {
-                const notification = document.getElementById('update-notification');
-                const message = document.getElementById('update-message');
-                const installBtn = document.getElementById('install-update-btn');
+            // Mostra bottone controllo manuale dopo 5 secondi
+            setTimeout(() => {
+                document.getElementById('checkUpdateBtn').style.display = 'inline-block';
+            }, 5000);
+
+            // Evento: Controllo in corso
+            window.updaterAPI.onUpdateChecking(() => {
+                const statusText = document.getElementById('updateStatusText');
+                statusText.textContent = 'Controllo aggiornamenti...';
+                statusText.style.color = '#2196F3';
+                document.getElementById('checkUpdateBtn').style.display = 'none';
+            });
+
+            // Evento: Aggiornamento disponibile
+            window.updaterAPI.onUpdateAvailable((info) => {
+                updateInfo = info;
+                const statusText = document.getElementById('updateStatusText');
+                statusText.innerHTML = `Nuovo aggiornamento: <strong>v${info.version}</strong>`;
+                statusText.style.color = '#4CAF50';
                 
-                switch (status.event) {
-                    case 'checking-for-update':
-                        notification.style.display = 'block';
-                        message.textContent = 'Checking for updates...';
-                        installBtn.style.display = 'none';
-                        break;
-                        
-                    case 'update-available':
-                        notification.style.display = 'block';
-                        message.textContent = `Update available: v${status.data.version}`;
-                        installBtn.style.display = 'none';
-                        break;
-                        
-                    case 'update-not-available':
-                        notification.style.display = 'none';
-                        break;
-                        
-                    case 'download-progress':
-                        notification.style.display = 'block';
-                        const percent = Math.round(status.data.percent);
-                        message.textContent = `Downloading update... ${percent}%`;
-                        installBtn.style.display = 'none';
-                        break;
-                        
-                    case 'update-downloaded':
-                        notification.style.display = 'block';
-                        message.textContent = 'Update downloaded! Ready to install.';
-                        installBtn.style.display = 'inline-block';
-                        break;
-                        
-                    case 'update-error':
-                        notification.style.display = 'block';
-                        message.textContent = `Update error: ${status.data}`;
-                        installBtn.style.display = 'none';
-                        setTimeout(() => {
-                            notification.style.display = 'none';
-                        }, 5000);
-                        break;
+                document.getElementById('downloadUpdateBtn').style.display = 'inline-block';
+                document.getElementById('checkUpdateBtn').style.display = 'none';
+            });
+
+            // Evento: Nessun aggiornamento
+            window.updaterAPI.onUpdateNotAvailable((info) => {
+                const statusText = document.getElementById('updateStatusText');
+                statusText.textContent = `v${info.version} - Aggiornato ✓`;
+                statusText.style.color = '#4CAF50';
+                
+                setTimeout(() => {
+                    statusText.textContent = `v${info.version}`;
+                    statusText.style.color = '#333';
+                    document.getElementById('checkUpdateBtn').style.display = 'inline-block';
+                }, 3000);
+            });
+
+            // Evento: Errore aggiornamento
+            window.updaterAPI.onUpdateError((error) => {
+                const statusText = document.getElementById('updateStatusText');
+                statusText.textContent = 'Errore controllo aggiornamenti';
+                statusText.style.color = '#f44336';
+                
+                setTimeout(() => {
+                    statusText.textContent = 'v' + document.getElementById('currentVersion').textContent;
+                    statusText.style.color = '#333';
+                    document.getElementById('checkUpdateBtn').style.display = 'inline-block';
+                }, 5000);
+            });
+
+            // Evento: Progresso download
+            window.updaterAPI.onDownloadProgress((progress) => {
+                document.getElementById('updateProgress').style.display = 'block';
+                document.getElementById('progressBarFill').style.width = progress.percent + '%';
+                document.getElementById('progressText').textContent = `${progress.percent}% (${Math.round(progress.transferred/1024/1024)}MB / ${Math.round(progress.total/1024/1024)}MB)`;
+            });
+
+            // Evento: Download completato
+            window.updaterAPI.onUpdateDownloaded((info) => {
+                const statusText = document.getElementById('updateStatusText');
+                statusText.innerHTML = `Aggiornamento <strong>v${info.version}</strong> pronto!`;
+                statusText.style.color = '#4CAF50';
+                
+                document.getElementById('updateProgress').style.display = 'none';
+                document.getElementById('downloadUpdateBtn').style.display = 'none';
+                document.getElementById('installUpdateBtn').style.display = 'inline-block';
+            });
+
+            // Bottone: Controllo manuale
+            document.getElementById('checkUpdateBtn').addEventListener('click', async () => {
+                const result = await window.updaterAPI.checkForUpdates();
+                if (!result.success) {
+                    const statusText = document.getElementById('updateStatusText');
+                    statusText.textContent = 'Errore controllo aggiornamenti';
+                    statusText.style.color = '#f44336';
                 }
             });
 
-            // Install update button handler
-            document.getElementById('install-update-btn')?.addEventListener('click', () => {
-                window.electronAPI.installUpdate();
+            // Bottone: Scarica aggiornamento
+            document.getElementById('downloadUpdateBtn').addEventListener('click', async () => {
+                const statusText = document.getElementById('updateStatusText');
+                statusText.textContent = 'Download in corso...';
+                statusText.style.color = '#2196F3';
+                
+                document.getElementById('downloadUpdateBtn').style.display = 'none';
+                
+                const result = await window.updaterAPI.downloadUpdate();
+                if (!result.success) {
+                    statusText.textContent = 'Errore download';
+                    statusText.style.color = '#f44336';
+                }
             });
 
-            // Manual update check button
-            document.addEventListener('DOMContentLoaded', () => {
-                const checkBtn = document.getElementById('check-updates-btn');
-                if (checkBtn) {
-                    checkBtn.addEventListener('click', async () => {
-                        checkBtn.disabled = true;
-                        checkBtn.textContent = 'Checking...';
-                        try {
-                            const result = await window.electronAPI.checkForUpdates();
-                            console.log('Update check result:', result);
-                        } finally {
-                            checkBtn.disabled = false;
-                            checkBtn.textContent = 'Manual Check';
-                        }
-                    });
+            // Bottone: Installa e riavvia
+            document.getElementById('installUpdateBtn').addEventListener('click', async () => {
+                if (confirm('L\'applicazione verrà riavviata per installare l\'aggiornamento. Continuare?')) {
+                    await window.updaterAPI.installUpdate();
                 }
             });
         </script>

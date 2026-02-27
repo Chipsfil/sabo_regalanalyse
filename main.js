@@ -14,6 +14,93 @@ let currentFilePath = null
 // Config management
 const configPath = path.join(app.getPath('userData'), 'config.json')
 
+// ===== CONSTANTS =====
+const CONFIG = {
+  PROTOCOL_NAME: 'app',
+  IMAGE_DIR_NAME: 'Bildern',
+  NO_IMAGE_PATH: 'no-image.png',
+  DEFAULT_IMAGE_DIR: '',
+  WINDOW_WIDTH: 1000,
+  WINDOW_HEIGHT: 600
+}
+
+const MIME_TYPES = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp'
+}
+
+// ===== AUTO UPDATER CONFIGURATION =====
+// Configurazione per aggiornamenti automatici
+autoUpdater.autoDownload = false // Non scaricare automaticamente
+autoUpdater.autoInstallOnAppQuit = true // Installa quando l'app viene chiusa
+
+// Log degli eventi di aggiornamento
+autoUpdater.logger = require('electron-log')
+autoUpdater.logger.transports.file.level = 'info'
+
+// Eventi AutoUpdater
+autoUpdater.on('checking-for-update', () => {
+  console.log('Controllo aggiornamenti...')
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-checking')
+  }
+})
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Aggiornamento disponibile:', info.version)
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      releaseNotes: info.releaseNotes
+    })
+  }
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Nessun aggiornamento disponibile')
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-not-available', {
+      version: info.version
+    })
+  }
+})
+
+autoUpdater.on('error', (err) => {
+  console.error('Errore aggiornamento:', err)
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-error', {
+      error: err.message || 'Errore sconosciuto'
+    })
+  }
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  const logMessage = `Velocità download: ${progressObj.bytesPerSecond} - Scaricato ${progressObj.percent}% (${progressObj.transferred}/${progressObj.total})`
+  console.log(logMessage)
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-download-progress', {
+      percent: Math.round(progressObj.percent),
+      transferred: progressObj.transferred,
+      total: progressObj.total,
+      bytesPerSecond: progressObj.bytesPerSecond
+    })
+  }
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Aggiornamento scaricato:', info.version)
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-downloaded', {
+      version: info.version
+    })
+  }
+})
+
 function getConfig() {
   try {
     return JSON.parse(fs.readFileSync(configPath))
@@ -26,70 +113,7 @@ function saveConfig(config) {
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
 }
 
-// ============ AUTO-UPDATER CONFIGURATION ============
-autoUpdater.autoDownload = true
-autoUpdater.autoInstallOnAppQuit = true
-
-// Auto-updater event handlers
-autoUpdater.on('checking-for-update', () => {
-  console.log('Checking for update...')
-  sendStatusToWindow('checking-for-update')
-})
-
-autoUpdater.on('update-available', (info) => {
-  console.log('Update available:', info)
-  sendStatusToWindow('update-available', info)
-})
-
-autoUpdater.on('update-not-available', (info) => {
-  console.log('Update not available:', info)
-  sendStatusToWindow('update-not-available')
-})
-
-autoUpdater.on('error', (err) => {
-  console.error('Update error:', err)
-  sendStatusToWindow('update-error', err.message)
-})
-
-autoUpdater.on('download-progress', (progressObj) => {
-  console.log(`Download speed: ${progressObj.bytesPerSecond}`)
-  console.log(`Downloaded ${progressObj.percent}%`)
-  sendStatusToWindow('download-progress', progressObj)
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  console.log('Update downloaded:', info)
-  sendStatusToWindow('update-downloaded', info)
-})
-
-// Helper function to send update status to renderer
-function sendStatusToWindow(event, data) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('update-status', { event, data })
-  }
-}
-
-// IPC handler for manual update check
-ipcMain.handle('check-for-updates', async () => {
-  try {
-    const result = await autoUpdater.checkForUpdates()
-    return { success: true, updateInfo: result.updateInfo }
-  } catch (error) {
-    return { success: false, error: error.message }
-  }
-})
-
-// IPC handler to install update
-ipcMain.handle('install-update', () => {
-  autoUpdater.quitAndInstall(false, true)
-})
-
-// IPC handler to get app version
-ipcMain.handle('get-app-version', () => {
-  return app.getVersion()
-})
-
-// ============ EXISTING DIALOG HANDLER ============
+// Add this with your other IPC handlers in main.js
 ipcMain.handle('open-directory-dialog', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory'],
@@ -150,7 +174,7 @@ async function loadLastFile(win) {
   }
 }
 
-// ============ EXCEL FILE HANDLERS ============
+// Excel File Handlers
 ipcMain.handle('import-excel', async (event) => {
   const { filePaths } = await dialog.showOpenDialog({
     properties: ['openFile'],
@@ -208,7 +232,7 @@ ipcMain.handle('reload-excel-file', (_, sheetName) => {
   }
 })
 
-// ============ CONFIG HANDLERS ============
+// Config Handlers
 ipcMain.handle('get-config', () => getConfig())
 
 ipcMain.handle('set-directory', async (event, newDir) => {
@@ -239,6 +263,7 @@ let isProtocolRegistered = false
 function setupProtocolHandler() {
   const config = getConfig()
   const bildernDir = config.Dir
+  // const bildernDir = path.join(Dir, 'Bildern')
 
   // Unregister first if already registered
   if (isProtocolRegistered) {
@@ -280,10 +305,44 @@ function getMimeType(filePath) {
     '.svg': 'image/svg+xml',
     '.webp': 'image/webp'
   }
-  return mimeTypes[ext] || 'application/octet-stream'
+  return MIME_TYPES[ext] || 'application/octet-stream'
 }
 
-// ============ APP LIFECYCLE ============
+// ===== AUTO UPDATER IPC HANDLERS =====
+// Controllo manuale aggiornamenti
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates()
+    return { success: true, updateInfo: result.updateInfo }
+  } catch (error) {
+    console.error('Errore controllo aggiornamenti:', error)
+    return { success: false, error: error.message }
+  }
+})
+
+// Scarica aggiornamento
+ipcMain.handle('download-update', async () => {
+  try {
+    await autoUpdater.downloadUpdate()
+    return { success: true }
+  } catch (error) {
+    console.error('Errore download aggiornamento:', error)
+    return { success: false, error: error.message }
+  }
+})
+
+// Installa aggiornamento e riavvia
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall(false, true)
+  return { success: true }
+})
+
+// Ottieni versione corrente
+ipcMain.handle('get-app-version', () => {
+  return { version: app.getVersion() }
+})
+
+// App Lifecycle
 app.whenReady().then(() => {
   // Initialize config
   const config = getConfig()
@@ -297,8 +356,12 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  // Check for updates immediately on startup
-  autoUpdater.checkForUpdatesAndNotify()
+  // Controlla aggiornamenti automaticamente all'avvio (dopo 3 secondi)
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      autoUpdater.checkForUpdates()
+    }
+  }, 3000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -309,7 +372,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-// ============ EXISTING RESTART HANDLER ============
+// Add this IPC listener
 ipcMain.on('restart-app', () => {
   console.log('Restarting application...');
   app.relaunch({ args: process.argv.slice(1).concat(['--relaunch']) });
