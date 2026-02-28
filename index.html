@@ -18,7 +18,7 @@
             <br><br>
         </div>
 
-        <h1 class="title">Sabo Regalanalyse v1.2.5</h1>
+        <h1 class="title">Sabo Regalanalyse</h1>
         <div class="img-header">
             <div class="settings-container">
                 <div class="settings-trigger"><img src="assets/settings.png"
@@ -197,7 +197,12 @@
                 const container = document.getElementById('tableContainer');
                 if (!container) return;
 
-                const html = container.innerHTML;
+                // Clone the container so we can strip hover panels without affecting the live DOM
+                const clone = container.cloneNode(true);
+                // Remove all hover-panel divs (they are invalid inside <tr> and cause DOM corruption on restore)
+                clone.querySelectorAll('.hover-panel').forEach(el => el.remove());
+
+                const html = clone.innerHTML;
                 if (!html || !html.trim()) {
                     sessionStorage.removeItem(TABLE_CACHE_KEY);
                     sessionStorage.removeItem(TABLE_CACHE_PATH_KEY);
@@ -224,6 +229,40 @@
                 if (cachedPath && lastPath && cachedPath !== lastPath) return false;
 
                 container.innerHTML = cachedHtml;
+
+                // Re-create hover panels and reattach event listeners on every restored row
+                container.querySelectorAll('tbody tr').forEach(function (row) {
+                    const hoverPanel = document.createElement('div');
+                    hoverPanel.className = 'hover-panel hidden';
+                    row.appendChild(hoverPanel);
+
+                    row.addEventListener('mousedown', function () {
+                        const d = row.dataset;
+                        hoverPanel.innerHTML = `
+                            <p class="hover-panel-product">${d.productname}</p>
+                            <div class="hover-img-container">
+                                <img src="${d.img}" alt="${d.productname}" class="hover-img">
+                            </div>
+                            <div class="hover-data-container">
+                                <p><strong>Marke</strong>: ${d.brand}</p>
+                                <p><strong>Preis</strong>: ${d.preis} CHF</p>
+                                <p><strong>Liter</strong>: ${d.liter} L</p>
+                                <p><strong>Familie</strong>: ${d.familie}</p>
+                                <p><strong>Qualität</strong>: ${d.qualität}</p>
+                                <p><strong>Kategorie</strong>: ${d.kategorie}</p>
+                                <p><strong>Zertifizierung</strong>: ${d.zertifizierung}</p>
+                                <p><strong>Gebinde</strong>: ${d.gebinde}</p>
+                                <p><strong>Hersteller</strong>: ${d.hersteller}</p>
+                            </div>
+                        `;
+                        hoverPanel.classList.remove('hidden');
+                        positionHoverPanel(row, hoverPanel);
+                    });
+
+                    row.addEventListener('mouseleave', function () {
+                        hoverPanel.classList.add('hidden');
+                    });
+                });
 
                 const statusEl = document.getElementById('import-status');
                 const cachedStatus = sessionStorage.getItem(TABLE_CACHE_STATUS_KEY);
