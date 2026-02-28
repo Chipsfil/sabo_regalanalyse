@@ -1,7 +1,7 @@
 {
   "name": "sabo-regalanalyse-app",
   "productName": "Sabo Regalanalyse",
-  "version": "1.2.9",
+  "version": "1.2.8",
   "main": "main.js",
   "homepage": "https://github.com/Chipsfil/sabo_regalanalyse",
   "scripts": {
