@@ -23,4 +23,4 @@ jobs:
       
       - run: npm run dist -- --publish always
         env:
-          GH_TOKEN: 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
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
