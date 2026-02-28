@@ -1,0 +1,26 @@
+name: Build and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - run: npm install
+      
+      - run: npm run dist -- --publish always
+        env:
+          GH_TOKEN: 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
