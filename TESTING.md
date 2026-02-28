@@ -61,7 +61,7 @@ For automated releases, you'll need a personal access token:
 4. Copy the token
 5. Set environment variable:
    ```bash
-   export GITHUB_TOKEN=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
+   export GITHUB_TOKEN=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
    ```
 
 ## Testing OTA Updates
