@@ -2,6 +2,8 @@
   "name": "sabo-regalanalyse-app",
   "productName": "Sabo Regalanalyse",
   "version": "1.2.8",
+  "description": "Sabo Regalanalyse Application",
+  "author": "Oleificio Sabo",
   "main": "main.js",
   "homepage": "https://github.com/Chipsfil/sabo_regalanalyse",
   "scripts": {
@@ -37,7 +39,7 @@
       "icon": "build/icon.icns",
       "category": "public.app-category.utilities",
       "identity": "-",
-      "hardened-runtime": false,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "notarize": false
     },
