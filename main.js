@@ -259,6 +259,12 @@ let downloadPercent = 0;
 // OTA Update functions
 function initUpdater() {
   autoUpdater.autoDownload = false;
+  
+  // For development/testing: disable signature validation
+  // Remove this in production if you have a valid code signing certificate
+  if (process.env.NODE_ENV !== 'production') {
+    autoUpdater.allowDowngrade = true;
+  }
 
   autoUpdater.on('checking-for-update', () => {
     updateState = 'checking';
