@@ -21,7 +21,6 @@ jobs:
         } else {
           npm install
         }
-    - run: npm run build
     - run: npm run publish
       env:
         GITHUB_TOKEN: ${{ secrets.Sabo }}
