@@ -1,7 +1,7 @@
 {
   "name": "sabo-regalanalyse-app",
   "productName": "Sabo Regalanalyse",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Sabo Regalanalyse Application",
   "author": "Oleificio Sabo",
   "main": "main.js",
