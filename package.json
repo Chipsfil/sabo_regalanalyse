@@ -9,7 +9,7 @@
     "build-icons": "electron-icon-builder --input=assets/icon.png --output=build --flatten",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "publish": "npm run build-icons && electron-builder --publish always"
+    "publish": "electron-builder --publish always"
   },
   "dependencies": {
     "electron-store": "^10.1.0",
@@ -32,19 +32,19 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icons/icon.ico"
     },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
-      "icon": "build/icon.icns",
+      "icon": "build/icons/icon.ico",
       "category": "public.app-category.utilities"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "build/icon.png",
+      "icon": "build/icons/icon.ico",
       "category": "Utility"
     },
     "nsis": {
