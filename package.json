@@ -39,7 +39,7 @@
         "dmg",
         "zip"
       ],
-      "icon": "build/icons/icon.ico",
+      "icon": "build/icons/icon.icns",
       "category": "public.app-category.utilities"
     },
     "linux": {
