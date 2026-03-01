@@ -9,7 +9,7 @@
     "build-icons": "electron-icon-builder --input=assets/icon.png --output=build --flatten",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "publish": "electron-builder --publish always"
+    "publish": "npm run build-icons && electron-builder --publish always"
   },
   "dependencies": {
     "electron-store": "^10.1.0",
@@ -28,6 +28,9 @@
     "appId": "com.sabo.regalanalyse",
     "productName": "Sabo Regalanalyse",
     "copyright": "Copyright © 2026 Oleificio Sabo",
+    "directories": {
+      "buildResources": "build"
+    },
     "win": {
       "target": [
         "nsis"
